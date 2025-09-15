@@ -1,66 +1,84 @@
-import java.io.IOException;
+package ejercicio1;
 
-class ExcepcionVocal extends Exception {
-    public ExcepcionVocal(char c) {
+import java.io.*;
+class VocalException extends Exception {
+    public VocalException(char c) {
         super("Se ingresó una vocal: " + c);
     }
 }
-
-class ExcepcionNumero extends Exception {
-    public ExcepcionNumero(char c) {
+class NumeroException extends Exception {
+    public NumeroException(char c) {
         super("Se ingresó un número: " + c);
     }
 }
-
-class ExcepcionBlanco extends Exception {
-    public ExcepcionBlanco() {
+class BlancoException extends Exception {
+    public BlancoException() {
         super("Se ingresó un espacio en blanco");
     }
 }
 
-class ExcepcionSalida extends Exception {
-    public ExcepcionSalida() {
-        super("Se ingresó el carácter de salida. Fin del programa.");
+class SalidaException extends Exception {
+    public SalidaException() {
+        super("Carácter de salida detectado. Fin del programa.");
     }
 }
 
 class LeerEntrada {
+    private Reader stream;
+
+    public LeerEntrada(InputStream fuente) {
+        stream = new InputStreamReader(fuente);
+    }
+
     public char getChar() throws IOException {
-        return (char) System.in.read(); // Lee un caracter desde teclado
+        return (char) this.stream.read();
     }
 }
 
-public class Ejercicio1 {
-    private LeerEntrada lector = new LeerEntrada();
+public class Procesador {
+    private LeerEntrada lector;   // atributo de la clase LeerEntrada
+    private char ultimoChar;      // almacena el carácter leído
 
-    public void procesar() throws Exception {
-        char c = lector.getChar();
-
-        if ("aeiouAEIOU".indexOf(c) != -1) {
-            throw new ExcepcionVocal(c);
-        } else if (Character.isDigit(c)) {
-            throw new ExcepcionNumero(c);
-        } else if (Character.isWhitespace(c)) {
-            throw new ExcepcionBlanco();
-        } else if (c == 'q' || c == 'Q') { // carácter de salida
-            throw new ExcepcionSalida();
-        } else {
-            System.out.println("Carácter ingresado: " + c);
-        }
+    public Procesador() {
+        lector = new LeerEntrada(System.in);
     }
 
+    public void procesar() throws Exception {
+        ultimoChar = lector.getChar();
+
+        // Ignorar saltos de línea
+        if (ultimoChar == '\n' || ultimoChar == '\r') {
+            return;
+        }
+
+        if ("aeiouAEIOU".indexOf(ultimoChar) != -1) {
+            throw new VocalException(ultimoChar);
+        } else if (Character.isDigit(ultimoChar)) {
+            throw new NumeroException(ultimoChar);
+        } else if (Character.isWhitespace(ultimoChar)) {
+            throw new BlancoException();
+        } else if (ultimoChar == 'q' || ultimoChar == 'Q') { // salida
+            throw new SalidaException();
+        } else {
+            System.out.println("Carácter aceptado: " + ultimoChar);
+        }
+    }
     public static void main(String[] args) {
-        Ejercicio1 app = new Ejercicio1();
+        Procesador proc = new Procesador();
+        System.out.println("Ingrese caracteres (Q para salir):");
+
         while (true) {
             try {
-                app.procesar();
-            } catch (ExcepcionVocal | ExcepcionNumero | ExcepcionBlanco e) {
+                proc.procesar();
+            } catch (VocalException | NumeroException | BlancoException e) {
                 System.out.println(e.getMessage());
-            } catch (ExcepcionSalida e) {
+            } catch (SalidaException e) {
                 System.out.println(e.getMessage());
                 break;
+            } catch (IOException e) {
+                System.out.println("Error de entrada/salida: " + e.getMessage());
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Excepción inesperada: " + e.getMessage());
             }
         }
     }
